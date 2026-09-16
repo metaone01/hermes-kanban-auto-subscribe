@@ -1,0 +1,7 @@
+name: kanban-home-subscribe
+version: 0.1.0
+description: Auto-subscribe every kanban card to each configured home channel (passive notify), idempotently.
+author: local
+kind: standalone
+provides_hooks:
+  - on_kanban_dispatch_tick
