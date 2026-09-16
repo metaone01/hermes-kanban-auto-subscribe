@@ -10,6 +10,8 @@
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome">
 </p>
 
+[中文](./README.md) | [English](./README.en.md)
+
 <p>
   <b>Every card on your <a href="https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban">Hermes Kanban</a> board, automatically subscribed to every configured home channel.</b><br>
   No per-card clicking · Idempotent · Passive notify, no agent wake · Backfill never replays history
@@ -241,9 +243,3 @@ hermes-kanban-auto-subscribe/
 ├── README.md / README.en.md
 └── .github/workflows/tests.yml
 ```
-
----
-
-## 📄 License
-
-[MIT](LICENSE) © 2026 metaone01

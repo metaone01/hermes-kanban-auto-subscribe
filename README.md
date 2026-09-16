@@ -14,7 +14,7 @@
   <b>让 <a href="https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban">Hermes Kanban</a> 上的每一张卡片，自动订阅每个已配置的 home channel。</b><br>
   无需逐卡点击 · 幂等 · 被动通知不唤醒 agent · 首次回填不重放历史
 </p>
-
+[中文](./README.md) | [English](./README.en.md)
 <p>
   <a href="#-解决什么问题">解决什么问题</a> ·
   <a href="#-安装">安装</a> ·
@@ -242,9 +242,3 @@ hermes-kanban-auto-subscribe/
 ├── README.md / README.en.md
 └── .github/workflows/tests.yml
 ```
-
----
-
-## 📄 License
-
-[MIT](LICENSE) © 2026 metaone01
