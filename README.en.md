@@ -1,11 +1,12 @@
 <div align="center">
-<h1>📣 kanban-home-subscribe — Auto-subscribe every Hermes Kanban card to your home channels</h1>
+<h1>📣 kanban-auto-subscribe — Auto-subscribe every Hermes Kanban card to your home channels</h1>
 
 <p>
   <img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="version">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="python">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license">
   <img src="https://img.shields.io/badge/Hermes-Plugin-purple.svg" alt="hermes-plugin">
+  <img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg" alt="platform">
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome">
 </p>
 
@@ -38,9 +39,14 @@ channel by default” is not achievable through configuration. This plugin close
 
 ## 📥 Install
 
+### Option 1 — Hermes plugin command (recommended)
+
+The plugin lives in the `kanban-auto-subscribe/` subdirectory of this repository, so the install
+command must name that subdirectory:
+
 ```bash
-hermes plugins install metaone01/hermes-kanban-home-subscribe
-hermes plugins enable kanban-home-subscribe
+hermes plugins install metaone01/hermes-kanban-auto-subscribe/kanban-auto-subscribe
+hermes plugins enable kanban-auto-subscribe
 ```
 
 > Plugins are opt-in (the `plugins.enabled` allow-list), so `enable` is required.
@@ -49,18 +55,45 @@ hermes plugins enable kanban-home-subscribe
 Restart the gateway so the plugin gets loaded:
 
 ```bash
-systemctl --user restart hermes-gateway     # Linux
+hermes gateway restart
 ```
 
 The first run backfills every board (see [How it works](#-how-it-works)).
 
-### Manual install
+### Option 2 — install scripts
+
+Three platform scripts ship in the repo root. They locate your Hermes directory, copy the plugin,
+verify the files and optionally enable it:
 
 ```bash
-git clone https://github.com/metaone01/hermes-kanban-home-subscribe.git
-cp -r hermes-kanban-home-subscribe ~/.hermes/plugins/
-hermes plugins enable kanban-home-subscribe
+# Linux
+./install.sh
+
+# macOS (Homebrew-aware)
+./install-macos.sh
+
+# Windows (PowerShell 5.1+ / 7+)
+.\install.ps1
 ```
+
+Common flags: `--force` (overwrite, backing up the old copy), `--uninstall`, `--no-deps`, `--help`.
+The PowerShell equivalents are `-Force` / `-Uninstall` / `-NoDeps` / `-Help`.
+If your execution policy blocks the script:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+```
+
+### Option 3 — manual copy
+
+```bash
+git clone https://github.com/metaone01/hermes-kanban-auto-subscribe.git
+cd hermes-kanban-auto-subscribe
+cp -r kanban-auto-subscribe ~/.hermes/plugins/     # Windows: %USERPROFILE%\.hermes\plugins\
+hermes plugins enable kanban-auto-subscribe
+```
+
+Replace the path if your `HERMES_HOME` is not the default.
 
 ---
 
@@ -95,7 +128,7 @@ does not dump every card's past events into your chat.
 
 **3. Subscribe once, never resurrect.**
 The plugin records which (board, task, platform) triples it wrote in its own state DB
-(`~/.hermes/plugin-data/kanban-home-subscribe/data.db`) and **never re-adds** a subscription that
+(`~/.hermes/plugin-data/kanban-auto-subscribe/data.db`) and **never re-adds** a subscription that
 was removed afterwards. That matters because:
 
 - if you **unsubscribe** a card from the dashboard, the plugin will not silently put it back;
@@ -109,12 +142,12 @@ again. That is intended.
 
 ## 🔧 Configuration
 
-Settings live under `plugins.entries.kanban-home-subscribe.settings` in `~/.hermes/config.yaml`:
+Settings live under `plugins.entries.kanban-auto-subscribe.settings` in `~/.hermes/config.yaml`:
 
 ```yaml
 plugins:
   entries:
-    kanban-home-subscribe:
+    kanban-auto-subscribe:
       settings:
         enabled: true        # master switch, default true
         max_per_tick: 500    # cards handled per board per tick, default 500
@@ -132,11 +165,11 @@ plugins:
 Set `dry_run: true`, restart the gateway, then read the log:
 
 ```bash
-grep kanban-home-subscribe ~/.hermes/logs/gateway.log
+grep kanban-auto-subscribe ~/.hermes/logs/gateway.log
 ```
 
 ```
-kanban-home-subscribe: board agent-unified — 191 card(s) / 191 subscription(s) [dry-run] on qqbot (state pruned 0)
+kanban-auto-subscribe: board agent-unified — 191 card(s) / 191 subscription(s) [dry-run] on qqbot (state pruned 0)
 ```
 
 ### Requirements
@@ -168,8 +201,8 @@ a schema difference, not a behaviour difference.
 ### Verify
 
 ```bash
-hermes plugins list | grep kanban-home-subscribe   # should show enabled
-grep kanban-home-subscribe ~/.hermes/logs/gateway.log
+hermes plugins list | grep kanban-auto-subscribe   # should show enabled
+grep kanban-auto-subscribe ~/.hermes/logs/gateway.log
 ```
 
 ---
@@ -177,8 +210,8 @@ grep kanban-home-subscribe ~/.hermes/logs/gateway.log
 ## 🧪 Development
 
 ```bash
-git clone https://github.com/metaone01/hermes-kanban-home-subscribe.git
-cd hermes-kanban-home-subscribe
+git clone https://github.com/metaone01/hermes-kanban-auto-subscribe.git
+cd hermes-kanban-auto-subscribe
 pip install pytest hermes-agent            # hermes-agent provides the Kanban modules
 python -m pytest tests/ -v
 ```
@@ -190,6 +223,24 @@ Two test layers:
   `HERMES_KANBAN_HOME`, so your real board is never touched): first subscribe, idempotence, archive
   skipping, no-resurrection after manual unsubscribe, new-card pickup, `dry_run` writes nothing,
   `max_per_tick` cap.
+
+## 📁 Layout
+
+```
+hermes-kanban-auto-subscribe/
+├── kanban-auto-subscribe/       # ← the plugin itself (copy this dir to install)
+│   ├── plugin.yaml              #   manifest: name: kanban-auto-subscribe
+│   ├── __init__.py              #   register() entrypoint
+│   └── auto_subscribe.py        #   subscription logic
+├── tests/                       # tests
+├── install.sh                   # Linux installer
+├── install-macos.sh             # macOS installer (Homebrew-aware)
+├── install.ps1                  # Windows installer
+├── pytest.ini
+├── LICENSE
+├── README.md / README.en.md
+└── .github/workflows/tests.yml
+```
 
 ---
 

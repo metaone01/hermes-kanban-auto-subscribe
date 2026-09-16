@@ -29,7 +29,7 @@ from typing import Any, Iterable
 
 logger = logging.getLogger(__name__)
 
-PLUGIN_NAME = "kanban-home-subscribe"
+PLUGIN_NAME = "kanban-auto-subscribe"
 
 # Cards handled per board per tick. First enable backfills the whole board; the
 # cap keeps a large board from holding the dispatcher's tick thread for long.

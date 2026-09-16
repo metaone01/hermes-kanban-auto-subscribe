@@ -1,16 +1,17 @@
 <div align="center">
-<h1>📣 kanban-home-subscribe — Hermes Kanban 主页频道自动订阅</h1>
+<h1>📣 kanban-auto-subscribe — Hermes Kanban 卡片自动订阅主页频道</h1>
 
 <p>
   <img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="version">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="python">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license">
   <img src="https://img.shields.io/badge/Hermes-Plugin-purple.svg" alt="hermes-plugin">
+  <img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg" alt="platform">
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome">
 </p>
 
 <p>
-  <b>让 <a href="https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban">Hermes Kanban</a> 上的每一张卡片，自动订阅每一已配置的 home channel。</b><br>
+  <b>让 <a href="https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban">Hermes Kanban</a> 上的每一张卡片，自动订阅每个已配置的 home channel。</b><br>
   无需逐卡点击 · 幂等 · 被动通知不唤醒 agent · 首次回填不重放历史
 </p>
 
@@ -31,7 +32,7 @@ Hermes Kanban 有一个 dashboard 开关 **“Notify home channels”**：打开
 （`completed` / `blocked` / `gave_up` / `crashed` / `timed_out` …）时，会把通知发到该平台的
 home channel。
 
-问题是它是**逐卡、逐平台**的手动开关，而且还存在两处官方机制都无法覆盖的缺口：
+问题是它是**逐卡、逐平台**的手动开关，而且两处官方机制都无法覆盖这个需求：
 
 | 机制 | 实际行为 |
 |---|---|
@@ -46,29 +47,59 @@ home channel。
 
 ## 📥 安装
 
+### 方式一：Hermes 插件命令（推荐）
+
+插件位于本仓库的 `kanban-auto-subscribe/` 子目录，因此安装命令要带上该子目录：
+
 ```bash
-hermes plugins install metaone01/hermes-kanban-home-subscribe
-hermes plugins enable kanban-home-subscribe
+hermes plugins install metaone01/hermes-kanban-auto-subscribe/kanban-auto-subscribe
+hermes plugins enable kanban-auto-subscribe
 ```
 
 > 插件是 opt-in 的（`plugins.enabled` 白名单），安装后必须 `enable`。
-> 插件不会申请任何 capability——它只读写 Kanban 自己的订阅表。
+> 本插件不申请任何 capability——它只读写 Kanban 自己的订阅表。
 
-安装后需要**重启 gateway**，插件才会加载：
-
-```bash
-systemctl --user restart hermes-gateway     # Linux
-```
-
-首次生效时，会对每个板做一次全量回填（见下方 [工作原理](#-工作原理)）。
-
-### 手动安装
+安装完成后重启 gateway，插件才会加载：
 
 ```bash
-git clone https://github.com/metaone01/hermes-kanban-home-subscribe.git
-cp -r hermes-kanban-home-subscribe ~/.hermes/plugins/
-hermes plugins enable kanban-home-subscribe
+hermes gateway restart
 ```
+
+首次生效时会对每个板做一次全量回填（见 [工作原理](#-工作原理)）。
+
+### 方式二：安装脚本
+
+仓库根目录提供三个平台脚本，会自动定位 Hermes 目录、复制插件、校验文件并可选启用：
+
+```bash
+# Linux
+./install.sh
+
+# macOS（Homebrew 感知）
+./install-macos.sh
+
+# Windows（PowerShell 5.1+ / 7+）
+.\install.ps1
+```
+
+通用选项：`--force`（覆盖已安装，自动备份旧版本）、`--uninstall`（卸载）、`--no-deps`（跳过依赖检查）、`--help`。
+PowerShell 对应参数为 `-Force` / `-Uninstall` / `-NoDeps` / `-Help`。
+若 Windows 执行策略拦截脚本：
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+```
+
+### 方式三：手动复制
+
+```bash
+git clone https://github.com/metaone01/hermes-kanban-auto-subscribe.git
+cd hermes-kanban-auto-subscribe
+cp -r kanban-auto-subscribe ~/.hermes/plugins/     # Windows: %USERPROFILE%\.hermes\plugins\
+hermes plugins enable kanban-auto-subscribe
+```
+
+`HERMES_HOME` 非默认路径时，替换成你的实际目录。
 
 ---
 
@@ -102,7 +133,7 @@ t_xxxx  | qqbot    | <home>  |           | dm        | notify        | <active p
 所以插件第一次启用时，不会把每张卡的历史事件当作新通知全部推给你。
 
 **3. 订阅一次，不再复活。**
-插件在自己的 state 库（`~/.hermes/plugin-data/kanban-home-subscribe/data.db`）里记录
+插件在自己的 state 库（`~/.hermes/plugin-data/kanban-auto-subscribe/data.db`）里记录
 哪些 (board, task, platform) 是它写的，**永不重新添加**一个之后被删除的订阅。这一点很重要：
 
 - 你在 dashboard 上**主动取消**了某张卡的通知 → 插件不会把它加回来；
@@ -115,12 +146,12 @@ t_xxxx  | qqbot    | <home>  |           | dm        | notify        | <active p
 
 ## 🔧 配置
 
-插件设置写在 `~/.hermes/config.yaml` 的 `plugins.entries.kanban-home-subscribe.settings` 下：
+插件设置写在 `~/.hermes/config.yaml` 的 `plugins.entries.kanban-auto-subscribe.settings` 下：
 
 ```yaml
 plugins:
   entries:
-    kanban-home-subscribe:
+    kanban-auto-subscribe:
       settings:
         enabled: true        # 总开关，默认 true
         max_per_tick: 500    # 每个板每次 tick 最多处理的卡片数，默认 500
@@ -138,11 +169,11 @@ plugins:
 把 `dry_run` 设为 `true` 并重启 gateway，然后看日志：
 
 ```bash
-grep kanban-home-subscribe ~/.hermes/logs/gateway.log
+grep kanban-auto-subscribe ~/.hermes/logs/gateway.log
 ```
 
 ```
-kanban-home-subscribe: board agent-unified — 191 card(s) / 191 subscription(s) [dry-run] on qqbot (state pruned 0)
+kanban-auto-subscribe: board agent-unified — 191 card(s) / 191 subscription(s) [dry-run] on qqbot (state pruned 0)
 ```
 
 ### 依赖
@@ -172,8 +203,8 @@ Hermes 后来把 Kanban 的连接与通知辅助函数拆成了独立模块
 ### 验证安装
 
 ```bash
-hermes plugins list | grep kanban-home-subscribe   # 应为 enabled
-grep kanban-home-subscribe ~/.hermes/logs/gateway.log
+hermes plugins list | grep kanban-auto-subscribe   # 应为 enabled
+grep kanban-auto-subscribe ~/.hermes/logs/gateway.log
 ```
 
 ---
@@ -181,8 +212,8 @@ grep kanban-home-subscribe ~/.hermes/logs/gateway.log
 ## 🧪 开发
 
 ```bash
-git clone https://github.com/metaone01/hermes-kanban-home-subscribe.git
-cd hermes-kanban-home-subscribe
+git clone https://github.com/metaone01/hermes-kanban-auto-subscribe.git
+cd hermes-kanban-auto-subscribe
 pip install pytest hermes-agent            # hermes-agent 提供 Kanban 模块
 python -m pytest tests/ -v
 ```
@@ -193,6 +224,24 @@ python -m pytest tests/ -v
 - `tests/test_integration.py` —— 针对**临时**的 board DB 真跑一遍订阅逻辑（用
   `HERMES_KANBAN_HOME` 隔离，不碰你的真实看板），覆盖首次订阅、幂等、归档跳过、
   手动取消不复活、新卡捕获、`dry_run` 零写入、`max_per_tick` 上限等。
+
+## 📁 目录结构
+
+```
+hermes-kanban-auto-subscribe/
+├── kanban-auto-subscribe/       # ← 插件本体（安装时复制这个目录）
+│   ├── plugin.yaml              #   清单：name: kanban-auto-subscribe
+│   ├── __init__.py              #   register() 入口
+│   └── auto_subscribe.py        #   订阅逻辑
+├── tests/                       # 测试
+├── install.sh                   # Linux 安装脚本
+├── install-macos.sh             # macOS 安装脚本（Homebrew 感知）
+├── install.ps1                  # Windows 安装脚本
+├── pytest.ini
+├── LICENSE
+├── README.md / README.en.md
+└── .github/workflows/tests.yml
+```
 
 ---
 

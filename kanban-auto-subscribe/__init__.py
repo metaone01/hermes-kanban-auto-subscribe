@@ -9,9 +9,9 @@ absolute import of the sibling module.
 from __future__ import annotations
 
 try:  # loaded as a package (the Hermes plugin loader path)
-    from .home_subscribe import on_dispatch_tick
+    from .auto_subscribe import on_dispatch_tick
 except ImportError:  # loaded as a top-level module (tooling / pytest)
-    from home_subscribe import on_dispatch_tick
+    from auto_subscribe import on_dispatch_tick
 
 __all__ = ["register", "on_dispatch_tick"]
 

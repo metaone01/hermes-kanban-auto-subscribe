@@ -1,9 +1,9 @@
 """Shared test fixtures.
 
-The repo root IS the Hermes plugin package (``__init__.py`` + ``register()``), so
-its own module-level relative import (``from .home_subscribe import ...``) fails
-when a test loads the root directory as a top-level module. Load the plugin's
-``home_subscribe`` module directly instead of importing the package.
+The plugin package lives in ``kanban-auto-subscribe/`` (repo root holds the docs,
+licence and install scripts). Its ``__init__.py`` does a relative import that only
+resolves when Hermes loads the directory as a package, so tests load
+``auto_subscribe.py`` from the package directory directly.
 """
 
 from __future__ import annotations
@@ -13,16 +13,22 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+PACKAGE_DIR = REPO_ROOT / "kanban-auto-subscribe"
+
+# Make ``import auto_subscribe`` work from the tests, matching what a standalone
+# module load does below.
+if str(PACKAGE_DIR) not in sys.path:
+    sys.path.insert(0, str(PACKAGE_DIR))
 
 
 def load_plugin_module():
-    """Import ``home_subscribe.py`` from the repo root as a standalone module."""
-    if "home_subscribe" in sys.modules:
-        return sys.modules["home_subscribe"]
+    """Import ``auto_subscribe.py`` from the plugin package as a standalone module."""
+    if "auto_subscribe" in sys.modules:
+        return sys.modules["auto_subscribe"]
     spec = importlib.util.spec_from_file_location(
-        "home_subscribe", REPO_ROOT / "home_subscribe.py",
+        "auto_subscribe", PACKAGE_DIR / "auto_subscribe.py",
     )
     module = importlib.util.module_from_spec(spec)
-    sys.modules["home_subscribe"] = module
+    sys.modules["auto_subscribe"] = module
     spec.loader.exec_module(module)
     return module

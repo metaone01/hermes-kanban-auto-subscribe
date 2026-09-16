@@ -15,11 +15,12 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))
+PACKAGE_DIR = REPO_ROOT / "kanban-auto-subscribe"
+sys.path.insert(0, str(PACKAGE_DIR))
 
 kb = pytest.importorskip("hermes_cli.kanban_db", reason="hermes-agent is not installed")
 
-import home_subscribe as hs  # noqa: E402
+import auto_subscribe as hs  # noqa: E402
 
 # Resolve the module layout the same way the plugin does: newer Hermes splits the
 # connection/notify helpers out of ``kanban_db``, older builds keep them there.

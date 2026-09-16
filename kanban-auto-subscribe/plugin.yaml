@@ -1,4 +1,4 @@
-name: kanban-home-subscribe
+name: kanban-auto-subscribe
 version: 0.1.0
 description: Auto-subscribe every kanban card to each configured home channel (passive notify), idempotently.
 author: local
